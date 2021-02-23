@@ -31,7 +31,7 @@ composer require jfxy/elasticsearch
 ```php
     public function index(array $data, string $id = null)
 ```
-
+ 
 #### create 创建文档
 * id必须指定，如果id已存在则创建失败
 ```php
