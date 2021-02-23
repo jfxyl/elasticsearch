@@ -17,15 +17,5 @@
             "Jfxy\\ElasticSearch\\": "src/"
         }
     },
-    "minimum-stability": "dev",
-    "extra": {
-        "laravel": {
-            "providers": [
-                "Jfxy\\ElasticSearch\\ElasticsearchServiceProvider"
-            ],
-            "aliases": {
-                "Es": "Jfxy\\ElasticSearch\\ElasticsearchFacade"
-            }
-        }
-    }
+    "minimum-stability": "dev"
 }
