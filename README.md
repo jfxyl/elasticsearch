@@ -5,10 +5,6 @@
 ```
 composer require jfxy/elasticsearch
 ```
-## laravel
-```
-php artisan vendor:publish --provider="Jfxy\ElasticSearch\ElasticsearchServiceProvider"
-```
 
 
 ## 注意
@@ -18,7 +14,7 @@ php artisan vendor:publish --provider="Jfxy\ElasticSearch\ElasticsearchServicePr
 #### setClient
 * 设置当前操作或查询的索引
 ```php
-    public function setIndex($index)
+    public function setClient($client)
 ```
 
 ## 索引
