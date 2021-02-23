@@ -1,0 +1,29 @@
+{
+    "name": "jfxy/elasticsearch",
+    "type": "library",
+    "require": {
+        "php": "^7.1",
+        "elasticsearch/elasticsearch": "~7.0"
+    },
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "yjj",
+            "email": "651069242@qq.com"
+        }
+    ],
+    "autoload": {
+        "psr-4": {
+            "Jfxy\\Elasticsearch\\": "src/"
+        }
+    },
+    "minimum-stability": "dev",
+    "laravel": {
+        "providers": [
+            "Jfxy\\ElasticSearch\\ElasticsearchServiceProvider"
+        ],
+        "aliases": {
+            "Es": "Jfxy\\ElasticSearch\\ElasticsearchFacade"
+        }
+    }
+}
