@@ -14,7 +14,7 @@
     ],
     "autoload": {
         "psr-4": {
-            "Jfxy\\ElasticSearch\\": "src/"
+            "Jfxy\\Elasticsearch\\": "src/"
         }
     },
     "minimum-stability": "dev"
