@@ -3,15 +3,13 @@
 namespace Jfxy\Elasticsearch;
 
 use \Closure;
-use \Elasticsearch\ClientBuilder;
+use Elasticsearch\ClientBuilder;
 
 class Builder
 {
     public $index;
 
     protected $client;
-
-    protected $query;
 
     protected $grammar;
 
@@ -49,9 +47,13 @@ class Builder
         '=', '>', '<', '>=', '<=', '!=', '<>'
     ];
 
-    public function __construct()
+    public function __construct($init = true)
     {
-        $this->grammar = new Grammar();
+        if ($init) {
+            $this->client = $this->clientBuilder();
+
+            $this->grammar = new Grammar();
+        }
     }
 
     /**
@@ -76,7 +78,28 @@ class Builder
      * @param array $config
      * @return mixed
      */
-    protected function clientBuilder(){}
+    protected function clientBuilder()
+    {
+        $config = config('es');
+
+        $client = ClientBuilder::create();
+
+        $client->setHosts($config['hosts'])
+            ->setConnectionPool($config['connection_pool'])
+            ->setSelector($config['selector'])
+            ->setSerializer($config['serializer']);
+
+        if (!is_null($config['connection_retry_times'])) {
+            $client->setRetries($config['connection_retry_times']);
+        }
+
+        if ($config['logging']['enabled']) {
+            $logger = ClientBuilder::defaultLogger($config['logging']['path'], $config['logging']['level']);
+            $client->setLogger($logger);
+        }
+
+        return $client->build();
+    }
 
     /**
      * @param $index
@@ -1138,7 +1161,7 @@ class Builder
 
     protected function newQuery()
     {
-        return new static();
+        return new static(false);
     }
 
     protected function prepareValueAndOperator($value, $operator, $useDefault = false)
@@ -1280,29 +1303,10 @@ class Builder
      */
     protected function run($params = [], $method)
     {
-        $this->clientBuilder();
-        if(!$this->client instanceof \Elasticsearch\Client){
+        if (!$this->client instanceof \Elasticsearch\Client) {
             throw new \RuntimeException('需要先配置elasticsearch client哦');
         }
-//        $result = $this->client->$method($params);
         $result = call_user_func([$this->client,$method],$params);
         return $result;
     }
-
-//    public function __call($name, $arguments)
-//    {
-//        if(method_exists($this,$name)){
-//            $result = $this->$name(...$arguments);
-//            if($result instanceof $this){
-//                return $this;
-//            }
-//            return $result;
-//        }
-//        throw new \BadMethodCallException(sprintf('%s方法不存在',$name));
-//    }
-//
-//    public static function __callStatic($method, $parameters)
-//    {
-//        return (new static)->$method(...$parameters);
-//    }
 }
