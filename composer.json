@@ -3,7 +3,8 @@
   "type": "library",
   "require": {
     "php": "^7.1",
-    "elasticsearch/elasticsearch": "~7.0"
+    "elasticsearch/elasticsearch": "~7.0",
+    "monolog/monolog":"*"
   },
   "license": "MIT",
   "authors": [

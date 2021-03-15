@@ -14,7 +14,7 @@ class ElasticsearchServiceProvider extends ServiceProvider
     public function boot()
     {
         $this->publishes([
-            __DIR__.'/config/es.php' => config_path('es.php'),
+            __DIR__.'/../config/es.php' => config_path('es.php'),
         ]);
     }
 
