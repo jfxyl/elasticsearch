@@ -11,20 +11,86 @@ composer require jfxy/elasticsearch
 * elasticsearch > 7
 * php >= 7.1
 
+## 使用
+#### laravel
+* 对于Laravel版本低于5.5的应用，需要在config/app.php文件中设置服务提供者和别名
+* Laravel版本为5.5或以上，Laravel会进行「包自动发现」
+```
+'providers' => [
+    .
+    .
+    .
+    Jfxy\Elasticsearch\ElasticsearchServiceProvider::class,
+],
+
+'aliases' => [
+    .
+    .
+    .
+    'Es' => Jfxy\Elasticsearch\ElasticsearchFacade::class
+]
+```
+* 发布配置文件
+```
+php artisan vendor:publish --provider="Jfxy\Elasticsearch\ElasticsearchServiceProvider"
+```
+* 调用方式
+
+```php
+    app('es')->setIndex('index1')->get();
+    
+    Es::setIndex('index1')->get();
+    
+    (new Builder)->setIndex('index1')->get();
+    
+    Builder::init()->setIndex('index1')->get();
+```
+#### other
+```php
+    $config = [
+        'hosts' => ['http://127.0.0.1:9200'],
+        'connection_retry_times' => 5,
+        'connection_pool' => \Elasticsearch\ConnectionPool\StaticNoPingConnectionPool::class,
+        'selector' => \Elasticsearch\ConnectionPool\Selectors\RoundRobinSelector::class,
+        'serializer' => \Elasticsearch\Serializers\SmartSerializer::class,
+    ];
+    
+    $client = Elasticsearch\ClientBuilder::create();
+    
+    $client->setHosts($config['hosts'])
+        ->setRetries($config['connection_retry_times'])
+        ->setConnectionPool($config['connection_pool'])
+        ->setSelector($config['selector'])
+        ->setSerializer($config['serializer'])
+        ->build();
+    
+    (new Builder)->setClient($client)->setIndex('index1')->get();
+```
+
+# 方法
+### 客户端
 #### setClient
-* 设置当前操作或查询的索引
+* 设置elasticsearch客户端实例，当默认的配置文件不满足需求时可以自定义
 ```php
     public function setClient($client)
 ```
+#### getClient
+```php
+    public function getClient()
+```
 
-## 索引
+### 索引操作
 #### setIndex
 * 设置当前操作或查询的索引
 ```php
     public function setIndex($index)
+    
+    ->setIndex('index1')
+    ->setIndex('index1,index2')
+    ->setIndex(['index1','index2'])
 ```
 
-## 文档操作
+### 文档操作
 #### index 索引文档
 * 不指定id或指定的id不存在时为创建操作
 * 指定id且id存在时为更新操作
@@ -48,13 +114,14 @@ composer require jfxy/elasticsearch
 ```
 
 #### delete 删除文档
+* 删除的文档不存在时会抛出 Elasticsearch\Common\Exceptions\Missing404Exception 异常
 ```php
     public function delete(string $id)
     
 ```
 
 
-## 查询操作
+### 查询操作
 #### select
 ```php
     public function select($columns) :self
@@ -100,6 +167,15 @@ composer require jfxy/elasticsearch
     ->whereNot(function($query){
         $query->where('a',1)->where('b',2);
     })
+```
+
+#### filter
+* 用法同where一致，不过条件会写在filter下
+```php
+    public function filter($field, $operator = null, $value = null, $boolean = 'and',$not = false) :self
+    public function orFilter($field, $operator = null, $value = null) :self
+    public function filterNot($field, $value = null) :self
+    public function orFilterNot($field, $value = null) :self
 ```
 
 #### in
@@ -380,7 +456,7 @@ composer require jfxy/elasticsearch
     ->extendedStats('media_CI')
 ````
 
-* topHits方法是top_hits类型聚合的封装，只能在聚合内使用，获取每个分组内的记录
+* topHits方法是top_hits类型聚合的封装
 ```php
     public function topHits(array $appendParams = []) :self
     
@@ -442,10 +518,16 @@ composer require jfxy/elasticsearch
     public function dsl($type = 'array')
 ```
 
-#### get
-* 查询结果，$directReturn = true，返回未经处理的结果
+#### response
+* 原样输出查询结果
 ```php
-    public function get($directReturn = false)
+    public function response()
+```
+
+#### get
+* 返回经过一定处理的结果
+```php
+    public function get()
     
     // $directReturn = false时，返回以下数据
     [
@@ -475,9 +557,9 @@ composer require jfxy/elasticsearch
 ```
 
 #### first
-* 返回第一条记录，$directReturn = true，返回未经处理的结果
+* 返回第一条记录
 ```php
-    public function first($directReturn = false)
+    public function first()
 ```
 
 #### count 计数 
@@ -533,19 +615,6 @@ composer require jfxy/elasticsearch
         return $this;
     }
 ```
-## query、scrollQuery实现示例
-```php
-    public function query()
-    {
-        if(!is_string($this->dsl)){
-            $this->dsl = json_encode($this->dsl,JSON_UNESCAPED_UNICODE);
-        }
-        
-        /****用内部组装好的$this->dsl进行查询，并返回es的响应...****/
-
-        return $response;
-    }
-```
 
 ## 调用示例
 ```php
@@ -553,6 +622,7 @@ composer require jfxy/elasticsearch
     Es::init()->select('id','name')->where('id',3)->groupBy('platform_name')->get();
     Es::init()->select('id','name')->where('id',3)->paginator(2,15);
     Es::init()->select('id','name')->where('id',3)->first();
+    Es::init()->select('id','name')->where('id',3)->response();
     Es::init()->select('id','name')->where('id',3)->count();
     
     Es::init()->select('news_title','news_url','news_uuid','platform')

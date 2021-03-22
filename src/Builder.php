@@ -56,6 +56,11 @@ class Builder
         }
     }
 
+    public function init()
+    {
+        return new static();
+    }
+
     /**
      * @param $client
      * @return $this
@@ -91,11 +96,6 @@ class Builder
 
         if (!is_null($config['connection_retry_times'])) {
             $client->setRetries($config['connection_retry_times']);
-        }
-
-        if ($config['logging']['enabled']) {
-            $logger = ClientBuilder::defaultLogger($config['logging']['path'], $config['logging']['level']);
-            $client->setLogger($logger);
         }
 
         return $client->build();
@@ -1159,6 +1159,10 @@ class Builder
         return $this;
     }
 
+    /**
+     * 闭包内部使用
+     * @return Builder
+     */
     protected function newQuery()
     {
         return new static(false);

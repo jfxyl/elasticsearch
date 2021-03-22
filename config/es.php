@@ -5,7 +5,7 @@ return [
      * Elasticsearch Connection Hosts
      */
     'hosts' => [
-        'http://139.196.157.136:9200'
+        'http://127.0.0.1:9200'
     ],
 
     /*
@@ -46,14 +46,4 @@ return [
      * --------------------------------------------------------------------------
      */
     'serializer' => \Elasticsearch\Serializers\SmartSerializer::class,
-
-    /*
-     * Elasticsearch Log
-     *
-     */
-    'logging' => [
-        'enabled'   => false,
-        'level'     => 'debug',
-        'path'  => storage_path('logs/elasticsearch.log')
-    ],
 ];
