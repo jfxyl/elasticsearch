@@ -3,6 +3,7 @@
 namespace Jfxy\Elasticsearch;
 
 use \Closure;
+use Elasticsearch\Client;
 use Elasticsearch\ClientBuilder;
 
 class Builder
@@ -39,6 +40,8 @@ class Builder
 
     public $minimumShouldMatch;
 
+    public $minScore;
+
     public $highlightConfig = [];
 
     protected $response;
@@ -47,18 +50,40 @@ class Builder
         '=', '>', '<', '>=', '<=', '!=', '<>'
     ];
 
-    public function __construct($init = true)
+    public function __construct($config = [],$init = true)
     {
-        if ($init) {
+        // 当使用闭包嵌套时，会通过newQuery方法实例化当前类时，设置$init = false，避免在每一个闭包中都进行实例化
+        if($init){
+            $this->config = $config;
             $this->client = $this->clientBuilder();
-
             $this->grammar = new Grammar();
         }
     }
 
-    public function init()
+    /**
+     * @param array $config
+     * @param bool $init
+     * @return Builder
+     */
+    public static function init($config = [],$init = true)
     {
-        return new static();
+        return new static($config,$init);
+    }
+
+    /**
+     * @return Client
+     */
+    protected function clientBuilder()
+    {
+        $client = ClientBuilder::create();
+
+        if (isset($this->config['hosts']))                       $client->setHosts($this->config['hosts']);
+        if (isset($this->config['connection_pool']))             $client->setConnectionPool($this->config['connection_pool']);
+        if (isset($this->config['selector']))                    $client->setSelector($this->config['selector']);
+        if (isset($this->config['serializer']))                  $client->setSerializer($this->config['serializer']);
+        if (isset($this->config['connection_retry_times']))      $client->setRetries($this->config['connection_retry_times']);
+
+        return $client->build();
     }
 
     /**
@@ -77,28 +102,6 @@ class Builder
     public function getClient()
     {
         return $this->client;
-    }
-
-    /**
-     * @param array $config
-     * @return mixed
-     */
-    protected function clientBuilder()
-    {
-        $config = config('es');
-
-        $client = ClientBuilder::create();
-
-        $client->setHosts($config['hosts'])
-            ->setConnectionPool($config['connection_pool'])
-            ->setSelector($config['selector'])
-            ->setSerializer($config['serializer']);
-
-        if (!is_null($config['connection_retry_times'])) {
-            $client->setRetries($config['connection_retry_times']);
-        }
-
-        return $client->build();
     }
 
     /**
@@ -937,6 +940,16 @@ class Builder
     }
 
     /**
+     * @param $value
+     * @return Builder
+     */
+    public function minScore($value): self
+    {
+        $this->minScore = $value;
+        return $this;
+    }
+
+    /**
      * @param string $scroll
      * @return $this
      */
@@ -1310,7 +1323,7 @@ class Builder
         if (!$this->client instanceof \Elasticsearch\Client) {
             throw new \RuntimeException('需要先配置elasticsearch client哦');
         }
-        $result = call_user_func([$this->client,$method],$params);
+        $result = call_user_func([$this->client, $method], $params);
         return $result;
     }
 }

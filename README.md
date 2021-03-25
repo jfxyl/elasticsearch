@@ -35,17 +35,11 @@ composer require jfxy/elasticsearch
 php artisan vendor:publish --provider="Jfxy\Elasticsearch\ElasticsearchServiceProvider"
 ```
 * 调用方式
-
+> 1、在laravel中可以使用门面Es来进行调用
 ```php
-    app('es')->setIndex('index1')->get();
-    
-    Es::setIndex('index1')->get();
-    
-    (new Builder)->setIndex('index1')->get();
-    
-    Builder::init()->setIndex('index1')->get();
+    Es::setIndex('products')->where('type','normal')->get();
 ```
-#### other
+> 2、可以通过传入配置文件进行调用
 ```php
     $config = [
         'hosts' => ['http://127.0.0.1:9200'],
@@ -54,31 +48,42 @@ php artisan vendor:publish --provider="Jfxy\Elasticsearch\ElasticsearchServicePr
         'selector' => \Elasticsearch\ConnectionPool\Selectors\RoundRobinSelector::class,
         'serializer' => \Elasticsearch\Serializers\SmartSerializer::class,
     ];
+    Builder::init($config)->setIndex('products')->get();
+```
+> 3、可以使用子类继承\Jfxy\Elasticsearch\Builder，通过重写clientBuilder方法和设置index来简化调用，同时可以在子类中对复杂的操作进行封装
+```php
+    class Product extends \Jfxy\Elasticsearch\Builder
+    {
     
-    $client = Elasticsearch\ClientBuilder::create();
+        public $index = 'products';
     
-    $client->setHosts($config['hosts'])
-        ->setRetries($config['connection_retry_times'])
-        ->setConnectionPool($config['connection_pool'])
-        ->setSelector($config['selector'])
-        ->setSerializer($config['serializer'])
-        ->build();
+        protected function clientBuilder()
+        {
+            $config = [
+                'hosts' => ['http://139.196.157.136:9200'],
+                'connection_retry_times' => 5,
+                'connection_pool' => \Elasticsearch\ConnectionPool\StaticNoPingConnectionPool::class,
+                'selector' => \Elasticsearch\ConnectionPool\Selectors\RoundRobinSelector::class,
+                'serializer' => \Elasticsearch\Serializers\SmartSerializer::class,
+            ];
     
-    (new Builder)->setClient($client)->setIndex('index1')->get();
+            $client = \Elasticsearch\ClientBuilder::create();
+    
+            $client->setHosts($config['hosts'])
+                ->setRetries($config['connection_retry_times'])
+                ->setConnectionPool($config['connection_pool'])
+                ->setSelector($config['selector'])
+                ->setSerializer($config['serializer'])
+                ->build();
+    
+            return $client->build();
+        }
+    }
+    
+    Product::init()->get();
 ```
 
 # 方法
-### 客户端
-#### setClient
-* 设置elasticsearch客户端实例，当默认的配置文件不满足需求时可以自定义
-```php
-    public function setClient($client)
-```
-#### getClient
-```php
-    public function getClient()
-```
-
 ### 索引操作
 #### setIndex
 * 设置当前操作或查询的索引
@@ -119,7 +124,6 @@ php artisan vendor:publish --provider="Jfxy\Elasticsearch\ElasticsearchServicePr
     public function delete(string $id)
     
 ```
-
 
 ### 查询操作
 #### select

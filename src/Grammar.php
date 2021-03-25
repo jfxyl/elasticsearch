@@ -17,6 +17,7 @@ class Grammar
     protected $selectComponents = [
         '_source' => 'fields',
         'collapse' => 'collapse',
+        'min_score' => 'minScore',
         'from' => 'from',
         'size' => 'size',
         'sort' => 'orders',
@@ -333,6 +334,11 @@ class Grammar
             $collapse = $builder->collapse;
         }
         return $collapse;
+    }
+
+    public function compileMinScore($builder)
+    {
+        return $builder->minScore;
     }
 
     public function compileHighlight($builder)
