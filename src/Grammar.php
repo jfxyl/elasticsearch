@@ -27,14 +27,6 @@ class Grammar
         'highlight' => 'highlight',
     ];
 
-    protected $tophitsComponents = [
-        '_source' => 'fields',
-        'from' => 'from',
-        'size' => 'size',
-        'sort' => 'orders',
-        'highlight' => 'highlight',
-    ];
-
     protected $operatorMappings = [
         '>' => 'gt',
         '>=' => 'gte',
@@ -124,7 +116,7 @@ class Grammar
         return $params;
     }
 
-    public function compileComponents($builder) :array
+    public function compileComponents($builder)
     {
         $dsl = [];
         foreach($this->selectComponents as $k => $v){
@@ -133,7 +125,7 @@ class Grammar
                 $dsl[$k] = $this->$method($builder);
             }
         }
-        return $dsl;
+        return empty($dsl) ? new \stdClass() : $dsl;
     }
 
     public function compileFields($builder) :array
@@ -143,9 +135,6 @@ class Grammar
 
     public function compileWheres($builder,$filter = false,$not = false) :array
     {
-        if(empty($builder->wheres)){
-            return ["match_all" => new \stdClass()];
-        }
         $whereGroups = $this->wherePriorityGroup($builder->wheres);
         $operation = count($whereGroups) === 1 ? 'must' : 'should';
         $bool = [];

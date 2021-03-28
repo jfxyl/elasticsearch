@@ -14,7 +14,7 @@ class Builder
 
     protected $grammar;
 
-    public $wheres = [];
+    public $wheres;
 
     public $postWheres;
 
@@ -56,8 +56,8 @@ class Builder
         if($init){
             $this->config = $config;
             $this->client = $this->clientBuilder();
-            $this->grammar = new Grammar();
         }
+        $this->grammar = new Grammar();
     }
 
     /**
