@@ -1132,7 +1132,7 @@ class Builder
      * ]
      * @return $this
      */
-    public function topHits(array $params = []): self
+    public function topHits($params = []): self
     {
         return $this->aggs('top_hits', 'top_hits', $params);
     }

@@ -275,6 +275,35 @@ php artisan vendor:publish --provider="Jfxy\Elasticsearch\ElasticsearchServicePr
     ->whereMultiMatch(['news_title','news_content'],'上海','phrase',["operator" => "OR"])
 ```
 
+#### minimumShouldMatch 最小匹配度
+```php
+    public function minimumShouldMatch($value) :self
+    
+    ->where('aa',1)->orWhere('bb',1)->orWhere('cc',1)->minimumShouldMatch(2)
+    
+    ->where(function(Es $query){
+        $query->where('aa',1)->orWhere('bb',1)->orWhere('cc',1)
+            ->minimumShouldMatch('50%');
+    })
+    
+    ->postWhere(function(Es $query){
+        $query->where('aa',1)->orWhere('bb',1)->orWhere('cc',1)
+            ->minimumShouldMatch('50%');
+    })
+```
+
+#### whereNested nested类型字段查询
+* 仅支持传入闭包和数组条件
+```php
+    public function whereNested($path,$wheres,$appendParams = []) :self
+    
+    ->whereNested('skus',function(Es $query){
+        $query->where('skus.title','iphone')->where('skus.des','iphone');
+    },['inner_hits'=>['highlight' => ['fields'=>['skus.title'=>new \stdClass()]]]]);
+    
+    ->whereNested('skus',['skus.title' => 'iphone','skus.description' => 'iphone',['skus.price','>','100']],['inner_hits'=>['highlight' => ['fields'=>['skus.title'=>new \stdClass()]]]]);
+```
+
 #### postWhere 后置过滤器
 * postWhere方法添加的条件会作用于post_filter查询，条件作用于聚合之后
 * postWhere方法参数同where方法相同，复杂的检索可以传入数组或闭包
@@ -310,6 +339,11 @@ php artisan vendor:publish --provider="Jfxy\Elasticsearch\ElasticsearchServicePr
     ->collapse('news_sim_hash')->aggs('alias','cardinality',['field'=>'news_sim_hash'])
     ->collapse('news_sim_hash')->cardinality('news_sim_hash')
     ->collapse('news_sim_hash')->paginator()
+```
+
+#### minScore
+```php
+    public function minScore($value): self
 ```
 
 #### from
@@ -464,7 +498,7 @@ php artisan vendor:publish --provider="Jfxy\Elasticsearch\ElasticsearchServicePr
 ```php
     public function topHits(array $appendParams = []) :self
     
-    $query->topHits([
+    ->topHits([
         'from' => 2,
         'size' => 1,
         'sort' => ['news_posttime' => ['order' => 'asc']],
@@ -478,20 +512,14 @@ php artisan vendor:publish --provider="Jfxy\Elasticsearch\ElasticsearchServicePr
                 'news_digest' => ['number_of_fragments' => 0]]
             ]
     ]);
-
-    $query->topHits()
-        ->from(2)
-        ->size(1)
-        ->orderBy('news_posttime','asc')
-        ->select('news_title','news_posttime','news_url','news_digest')
-        ->highlightConfig([
-            'require_field_match'=>true,
-            'pre_tags'=>'<h3>',
-            'post_tags'=>'</h3>'
-        ])
-        ->highlight('news_title')
-        ->highlight('news_digest',['number_of_fragments' => 0]);
     
+    ->topHits(function(Es $query){
+        $query->size(1)->from(2)
+            ->orderBy('news_posttime','asc')
+            ->select(['news_title','news_posttime','news_url','news_digest'])
+            ->highlight('news_title')
+            ->highlight('news_digest',['number_of_fragments' => 0]);
+    })
 ```
 * aggsFilter方法是filter类型聚合的封装，可在聚合内部进行条件过滤，$wheres参数仅支持数组和闭包，可参考where方法
 ```php

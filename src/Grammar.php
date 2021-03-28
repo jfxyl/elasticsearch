@@ -283,14 +283,6 @@ class Grammar
         $aggs = [];
         foreach($builder->aggs as $agg){
             $params = $agg['params'];
-            if($agg['type'] == 'top_hits'){
-                foreach($this->tophitsComponents as $k => $v){
-                    if(!is_null($builder->$v)){
-                        $method = 'compile' . ucfirst($v);
-                        $params[$k] = $this->$method($builder);
-                    }
-                }
-            }
             if($agg['params'] instanceof Builder){
                 $params = $this->compileWheres($agg['params']);
             }
