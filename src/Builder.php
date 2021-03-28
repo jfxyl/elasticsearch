@@ -1134,6 +1134,13 @@ class Builder
      */
     public function topHits($params = []): self
     {
+        if (!($params instanceof Closure) && !is_array($params)) {
+            throw new \InvalidArgumentException('非法参数');
+        }
+        if($params instanceof Closure){
+            call_user_func($params, $query = $this->newQuery());
+            $params = $query->dsl();
+        }
         return $this->aggs('top_hits', 'top_hits', $params);
     }
 
