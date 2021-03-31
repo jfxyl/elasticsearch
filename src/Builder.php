@@ -32,6 +32,8 @@ class Builder
 
     public $highlight;
 
+    public $raw;
+
     public $dsl;
 
     public $scroll;
@@ -50,10 +52,10 @@ class Builder
         '=', '>', '<', '>=', '<=', '!=', '<>'
     ];
 
-    public function __construct($config = [],$init = true)
+    public function __construct($config = [], $init = true)
     {
         // 当使用闭包嵌套时，会通过newQuery方法实例化当前类时，设置$init = false，避免在每一个闭包中都进行实例化
-        if($init){
+        if ($init) {
             $this->config = $config;
             $this->client = $this->clientBuilder();
         }
@@ -65,9 +67,9 @@ class Builder
      * @param bool $init
      * @return Builder
      */
-    public static function init($config = [],$init = true)
+    public static function init($config = [], $init = true)
     {
-        return new static($config,$init);
+        return new static($config, $init);
     }
 
     /**
@@ -77,11 +79,11 @@ class Builder
     {
         $client = ClientBuilder::create();
 
-        if (isset($this->config['hosts']))                       $client->setHosts($this->config['hosts']);
-        if (isset($this->config['connection_pool']))             $client->setConnectionPool($this->config['connection_pool']);
-        if (isset($this->config['selector']))                    $client->setSelector($this->config['selector']);
-        if (isset($this->config['serializer']))                  $client->setSerializer($this->config['serializer']);
-        if (isset($this->config['connection_retry_times']))      $client->setRetries($this->config['connection_retry_times']);
+        if (isset($this->config['hosts'])) $client->setHosts($this->config['hosts']);
+        if (isset($this->config['connection_pool'])) $client->setConnectionPool($this->config['connection_pool']);
+        if (isset($this->config['selector'])) $client->setSelector($this->config['selector']);
+        if (isset($this->config['serializer'])) $client->setSerializer($this->config['serializer']);
+        if (isset($this->config['connection_retry_times'])) $client->setRetries($this->config['connection_retry_times']);
 
         return $client->build();
     }
@@ -1122,22 +1124,15 @@ class Builder
     }
 
     /**
-     * 聚合组内返回文档
-     * @param array $appendParams
-     * [
-     *      'size' => 1,
-     *      'sort' => ['news_posttime' => ['order' => 'desc']],
-     *      '_source' => ['news_title','news_posttime','news_url'],
-     *      'highlight' => ['fields' => ['news_title' => new \stdClass(),'news_digest' => ['number_of_fragments' => 0]]]
-     * ]
+     * @param $params
      * @return $this
      */
-    public function topHits($params = []): self
+    public function topHits($params): self
     {
         if (!($params instanceof Closure) && !is_array($params)) {
             throw new \InvalidArgumentException('非法参数');
         }
-        if($params instanceof Closure){
+        if ($params instanceof Closure) {
             call_user_func($params, $query = $this->newQuery());
             $params = $query->dsl();
         }
@@ -1156,48 +1151,14 @@ class Builder
         return $this->aggs($alias, 'filter', $this->newQuery()->where($wheres), ... $subGroups);
     }
 
-    protected function addArrayOfWheres($field, $boolean = 'and', $not = false, $filter = false)
-    {
-        return $this->nestedQuery(function (self $query) use ($field, $not, $filter) {
-            foreach ($field as $key => $value) {
-                if (is_numeric($key) && is_array($value)) {
-                    $query->where(...$value);
-                } else {
-                    $query->where($key, '=', $value);
-                }
-            }
-        }, $boolean, $not, $filter);
-    }
-
-    protected function nestedQuery(Closure $callback, $boolean = 'and', $not = false, $filter = false): self
-    {
-        call_user_func($callback, $query = $this->newQuery());
-        if (count($query->wheres)) {
-            $type = 'nestedQuery';
-            $this->wheres[] = compact('type', 'query', 'boolean', 'not', 'filter');
-        }
-        return $this;
-    }
-
     /**
-     * 闭包内部使用
-     * @return Builder
+     * @param $dsl
+     * @return $this
      */
-    protected function newQuery()
+    public function raw($dsl)
     {
-        return new static(false);
-    }
-
-    protected function prepareValueAndOperator($value, $operator, $useDefault = false)
-    {
-        if ($useDefault) {
-            return [$operator, '='];
-        } elseif (is_null($value) && in_array($operator, $this->operators)) {
-            throw new \InvalidArgumentException('非法运算符和值组合');
-        } elseif (is_array($value) && !in_array($operator, ['=', '!=', '<>'])) {
-            throw new \InvalidArgumentException('非法运算符和值组合');
-        }
-        return [$value, $operator];
+        $this->raw = $dsl;
+        return $this;
     }
 
     /**
@@ -1207,7 +1168,9 @@ class Builder
      */
     public function dsl($type = 'array')
     {
-        if (empty($this->dsl)) {
+        if (!empty($this->raw)) {
+            $this->dsl = $this->raw;
+        } else {
             $this->dsl = $this->grammar->compileComponents($this);
         }
         if (!is_string($this->dsl) && $type == 'json') {
@@ -1332,5 +1295,49 @@ class Builder
         }
         $result = call_user_func([$this->client, $method], $params);
         return $result;
+    }
+
+    protected function addArrayOfWheres($field, $boolean = 'and', $not = false, $filter = false)
+    {
+        return $this->nestedQuery(function (self $query) use ($field, $not, $filter) {
+            foreach ($field as $key => $value) {
+                if (is_numeric($key) && is_array($value)) {
+                    $query->where(...$value);
+                } else {
+                    $query->where($key, '=', $value);
+                }
+            }
+        }, $boolean, $not, $filter);
+    }
+
+    protected function nestedQuery(Closure $callback, $boolean = 'and', $not = false, $filter = false): self
+    {
+        call_user_func($callback, $query = $this->newQuery());
+        if (count($query->wheres)) {
+            $type = 'nestedQuery';
+            $this->wheres[] = compact('type', 'query', 'boolean', 'not', 'filter');
+        }
+        return $this;
+    }
+
+    /**
+     * 闭包内部使用
+     * @return Builder
+     */
+    protected function newQuery()
+    {
+        return new static(false);
+    }
+
+    protected function prepareValueAndOperator($value, $operator, $useDefault = false)
+    {
+        if ($useDefault) {
+            return [$operator, '='];
+        } elseif (is_null($value) && in_array($operator, $this->operators)) {
+            throw new \InvalidArgumentException('非法运算符和值组合');
+        } elseif (is_array($value) && !in_array($operator, ['=', '!=', '<>'])) {
+            throw new \InvalidArgumentException('非法运算符和值组合');
+        }
+        return [$value, $operator];
     }
 }

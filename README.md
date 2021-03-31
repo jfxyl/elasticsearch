@@ -52,10 +52,10 @@ php artisan vendor:publish --provider="Jfxy\Elasticsearch\ElasticsearchServicePr
 ```
 > 3、可以使用子类继承\Jfxy\Elasticsearch\Builder，通过重写clientBuilder方法和设置index来简化调用，同时可以在子类中对复杂的操作进行封装
 ```php
-    class Product extends \Jfxy\Elasticsearch\Builder
+    class Es extends \Jfxy\Elasticsearch\Builder
     {
     
-        public $index = 'products';
+        public $index = 'index1';
     
         protected function clientBuilder()
         {
@@ -80,7 +80,7 @@ php artisan vendor:publish --provider="Jfxy\Elasticsearch\ElasticsearchServicePr
         }
     }
     
-    Product::init()->get();
+    Es::init()->get();
 ```
 
 # 方法
@@ -496,7 +496,7 @@ php artisan vendor:publish --provider="Jfxy\Elasticsearch\ElasticsearchServicePr
 
 * topHits方法是top_hits类型聚合的封装
 ```php
-    public function topHits(array $appendParams = []) :self
+    public function topHits($params) :self
     
     ->topHits([
         'from' => 2,
@@ -667,7 +667,7 @@ php artisan vendor:publish --provider="Jfxy\Elasticsearch\ElasticsearchServicePr
         $query->groupBy('platform_name',['size'=>30]);
     },function(Es $query){
         $query->groupBy('platform_domian_pri',['size'=>30],function(Es $query){
-            $query->topHits(['size'=>1])->highlight('news_title');
+            $query->topHits(['size'=>1]);
         });
     })
     ->dateGroupBy('news_posttime')
