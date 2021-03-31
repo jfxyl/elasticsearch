@@ -1201,7 +1201,7 @@ class Builder
             ], $hit['_source'], isset($hit['highlight']) ? ['highlight' => $hit['highlight']] : []);
         }, $result['hits']['hits']);
         $data = [
-            'total' => $result['hits']['total']['value'],
+            'total' => $result['hits']['total'],
             'list' => $list
         ];
         if (isset($result['aggregations'])) {
@@ -1243,7 +1243,7 @@ class Builder
             $this->cardinality($collapse_field);
         }
         $result = $this->response();
-        $original_total = $total = $result['hits']['total']['value'];
+        $original_total = $total = $result['hits']['total'];
         if (!empty($this->collapse)) {
             $total = $result['aggregations'][$collapse_field . '_cardinality']['value'];
         }
