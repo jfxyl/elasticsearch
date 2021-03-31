@@ -8,8 +8,10 @@ composer require jfxy/elasticsearch
 
 
 ## 注意
-* elasticsearch > 6
-* php >= 7.1
+| elasticsearch |   php   |   package  |
+| --------------|---------| -----------|
+| \>= 7.0       | \>= 7.1 | 7.*        |
+| \>= 6.0       | \>= 7.1 | 6.*        |
 
 ## 使用
 #### laravel
