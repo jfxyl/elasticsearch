@@ -8,7 +8,7 @@ composer require jfxy/elasticsearch
 
 
 ## 注意
-* elasticsearch > 7
+* elasticsearch > 6
 * php >= 7.1
 
 ## 使用
