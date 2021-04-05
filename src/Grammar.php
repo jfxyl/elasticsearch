@@ -5,7 +5,7 @@ class Grammar
 {
     protected $commonComponents = [
         'index' => 'index',
-//        'type' => 'type',
+        'type' => 'type',
         'scroll' => 'scroll'
     ];
 

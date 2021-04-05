@@ -8,11 +8,13 @@ use Elasticsearch\ClientBuilder;
 
 class Builder
 {
-    public $index;
-
     protected $client;
 
     protected $grammar;
+
+    public $index;
+
+    public $type;
 
     public $wheres;
 
@@ -54,7 +56,7 @@ class Builder
 
     public function __construct($config = [], $init = true)
     {
-        // 当使用闭包嵌套时，会通过newQuery方法实例化当前类时，设置$init = false，避免在每一个闭包中都进行实例化
+        // 当使用闭包嵌套时，会通过newQuery方法实例化当前类时，设置$init = false，避免在每一个闭包中都进行es客户端的实例化
         if ($init) {
             $this->config = $config;
             $this->client = $this->clientBuilder();
@@ -67,7 +69,7 @@ class Builder
      * @param bool $init
      * @return Builder
      */
-    public static function init($config = [], $init = true)
+    public static function init($config = [], $init = true): self
     {
         return new static($config, $init);
     }
@@ -92,7 +94,7 @@ class Builder
      * @param $client
      * @return $this
      */
-    public function setClient($client)
+    public function setClient($client): self
     {
         $this->client = $client;
         return $this;
@@ -110,9 +112,19 @@ class Builder
      * @param $index
      * @return $this
      */
-    public function setIndex($index)
+    public function setIndex($index): self
     {
         $this->index = $index;
+        return $this;
+    }
+
+    /**
+     * @param $type
+     * @return $this
+     */
+    public function setType($type): self
+    {
+        $this->type = $type;
         return $this;
     }
 
@@ -127,7 +139,7 @@ class Builder
         $result = $this->run($this->grammar->compileIndexParams($this, $data, $id), 'index');
 
         if (!isset($result['result']) || !in_array($result['result'], ['created', 'updated'])) {
-            throw new \UnexpectedValueException('index error');
+            throw new \RuntimeException('index error');
         }
 
         return $result;
@@ -143,7 +155,7 @@ class Builder
     {
         $result = $this->run($this->grammar->compileCreateParams($this, $data, $id), 'create');
         if (!isset($result['result']) || $result['result'] !== 'created') {
-            throw new \UnexpectedValueException('create error');
+            throw new \RuntimeException('create error');
         }
 
         return $result;
@@ -160,7 +172,7 @@ class Builder
         $result = $this->run($this->grammar->compileUpdateParams($this, $data, $id), 'update');
 
         if (!isset($result['result']) || $result['result'] !== 'updated') {
-            throw new \UnexpectedValueException('update error');
+            throw new \RuntimeException('update error');
         }
 
         return $result;
@@ -176,7 +188,7 @@ class Builder
         $result = $this->run($this->grammar->compileDeleteParams($this, $id), 'delete');
 
         if (!isset($result['result']) || $result['result'] !== 'deleted') {
-            throw new \UnexpectedValueException('delete error');
+            throw new \RuntimeException('delete error');
         }
 
         return $result;
