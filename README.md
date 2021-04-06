@@ -52,12 +52,13 @@ php artisan vendor:publish --provider="Jfxy\Elasticsearch\ElasticsearchServicePr
     ];
     Builder::init($config)->setIndex('products')->get();
 ```
-> 3、可以使用子类继承\Jfxy\Elasticsearch\Builder，通过重写clientBuilder方法和设置index来简化调用，同时可以在子类中对复杂的操作进行封装
+> 3、可以使用子类继承\Jfxy\Elasticsearch\Builder，通过重写clientBuilder方法和设置index、type来简化调用，同时可以在子类中对复杂的操作进行封装
 ```php
     class Es extends \Jfxy\Elasticsearch\Builder
     {
     
         public $index = 'index1';
+        public $type = 'type1'; // 在es7及以上版本不需要
     
         protected function clientBuilder()
         {
@@ -88,13 +89,21 @@ php artisan vendor:publish --provider="Jfxy\Elasticsearch\ElasticsearchServicePr
 # 方法
 ### 索引操作
 #### setIndex
-* 设置当前操作或查询的索引
+* 设置当前操作或查询的index
 ```php
     public function setIndex($index)
     
     ->setIndex('index1')
     ->setIndex('index1,index2')
     ->setIndex(['index1','index2'])
+```
+
+#### setType
+* 设置当前操作或查询的type(在es7及以上版本不需要)
+```php
+    public function setType($type)
+    
+    ->setType('_doc')
 ```
 
 ### 文档操作
@@ -256,6 +265,35 @@ php artisan vendor:publish --provider="Jfxy\Elasticsearch\ElasticsearchServicePr
     public function orWhereNotFuzzy($field, $value, $appendParams = []) :self
     
     ->whereFuzzy('news_title','安徽合肥')
+```
+
+#### whereRaw 原生条件
+```php
+    public function whereRaw($where, $boolean = 'and', $not = false) :self
+    public function orWhereRaw($where) :self
+    
+    // 下面的例子是由于where方法提供的term查询无法设置一些其他的参数,可以改为使用whereRaw
+    ->whereRaw([
+       "term" => [
+           "news_title" => [
+               "value" => "安徽",
+               "boost" => 2
+           ]
+       ]
+   ])
+   
+   ->whereRaw([
+       'bool' => [
+           'must' => [
+               "term" => [
+                   "news_title" => [
+                       "value" => "安徽",
+                       "boost" => 2
+                   ]
+               ]
+           ]
+       ]
+   ])
 ```
 
 #### match
@@ -563,7 +601,6 @@ php artisan vendor:publish --provider="Jfxy\Elasticsearch\ElasticsearchServicePr
 ```php
     public function get()
     
-    // $directReturn = false时，返回以下数据
     [
         'total'     => 文档总数,
         'list'      => 文档列表,

@@ -136,13 +136,7 @@ class Builder
      */
     public function index(array $data, $id = null)
     {
-        $result = $this->run($this->grammar->compileIndexParams($this, $data, $id), 'index');
-
-        if (!isset($result['result']) || !in_array($result['result'], ['created', 'updated'])) {
-            throw new \RuntimeException('index error');
-        }
-
-        return $result;
+        return $this->run($this->grammar->compileIndexParams($this, $data, $id), 'index');
     }
 
     /**
@@ -153,12 +147,7 @@ class Builder
      */
     public function create(array $data, string $id)
     {
-        $result = $this->run($this->grammar->compileCreateParams($this, $data, $id), 'create');
-        if (!isset($result['result']) || $result['result'] !== 'created') {
-            throw new \RuntimeException('create error');
-        }
-
-        return $result;
+        return $this->run($this->grammar->compileCreateParams($this, $data, $id), 'create');
     }
 
     /**
@@ -169,13 +158,7 @@ class Builder
      */
     public function update(array $data, string $id)
     {
-        $result = $this->run($this->grammar->compileUpdateParams($this, $data, $id), 'update');
-
-        if (!isset($result['result']) || $result['result'] !== 'updated') {
-            throw new \RuntimeException('update error');
-        }
-
-        return $result;
+        return $this->run($this->grammar->compileUpdateParams($this, $data, $id), 'update');
     }
 
     /**
@@ -185,13 +168,7 @@ class Builder
      */
     public function delete(string $id)
     {
-        $result = $this->run($this->grammar->compileDeleteParams($this, $id), 'delete');
-
-        if (!isset($result['result']) || $result['result'] !== 'deleted') {
-            throw new \RuntimeException('delete error');
-        }
-
-        return $result;
+        return $this->run($this->grammar->compileDeleteParams($this, $id), 'delete');
     }
 
     /**
