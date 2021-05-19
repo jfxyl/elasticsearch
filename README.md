@@ -63,7 +63,7 @@ php artisan vendor:publish --provider="Jfxy\Elasticsearch\ElasticsearchServicePr
         protected function clientBuilder()
         {
             $config = [
-                'hosts' => ['http://139.196.157.136:9200'],
+                'hosts' => ['http://127.0.0.1:9200'],
                 'connection_retry_times' => 5,
                 'connection_pool' => \Elasticsearch\ConnectionPool\StaticNoPingConnectionPool::class,
                 'selector' => \Elasticsearch\ConnectionPool\Selectors\RoundRobinSelector::class,
