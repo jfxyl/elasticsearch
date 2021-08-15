@@ -455,10 +455,8 @@ php artisan vendor:publish --provider="Jfxy\Elasticsearch\ElasticsearchServicePr
             ['key'=>'1000-∞','from'=>'1000'],
         ]
     ])
-    ->aggs('alias','top_hits',$params)
-    ->aggs('alias','filter',function(Es $query){
-        $query->where('news_posttime','>','2020-09-01 00:00:00');
-    })
+    ->aggs('alias','top_hits',['size'=>1])
+    ->aggs('alias','filter',['term' => ['platform' => 'web']])
 ```
 
 * groupBy方法是aggs的terms类型聚合的封装  
@@ -536,9 +534,9 @@ php artisan vendor:publish --provider="Jfxy\Elasticsearch\ElasticsearchServicePr
 
 * topHits方法是top_hits类型聚合的封装
 ```php
-    public function topHits($params) :self
+    public function topHits(string $alias,$params) :self
     
-    ->topHits([
+    ->topHits('alias',[
         'from' => 2,
         'size' => 1,
         'sort' => ['news_posttime' => ['order' => 'asc']],
@@ -553,7 +551,7 @@ php artisan vendor:publish --provider="Jfxy\Elasticsearch\ElasticsearchServicePr
             ]
     ]);
     
-    ->topHits(function(Es $query){
+    ->topHits('alias',function(Es $query){
         $query->size(1)->from(2)
             ->orderBy('news_posttime','asc')
             ->select(['news_title','news_posttime','news_url','news_digest'])
@@ -706,7 +704,7 @@ php artisan vendor:publish --provider="Jfxy\Elasticsearch\ElasticsearchServicePr
         $query->groupBy('platform_name',['size'=>30]);
     },function(Es $query){
         $query->groupBy('platform_domian_pri',['size'=>30],function(Es $query){
-            $query->topHits(['size'=>1]);
+            $query->topHits('alias',['size'=>1]);
         });
     })
     ->dateGroupBy('news_posttime')

@@ -3,6 +3,8 @@ namespace Jfxy\Elasticsearch;
 
 class Grammar
 {
+    static private $instance;
+
     protected $commonComponents = [
         'index' => 'index',
         'type' => 'type',
@@ -33,6 +35,22 @@ class Grammar
         '<' => 'lt',
         '<=' => 'lte',
     ];
+
+    private function __construct()
+    {
+    }
+
+    private function __clone()
+    {
+    }
+
+    static public function getInstance()
+    {
+        if (!(self::$instance instanceof self)) {
+            self::$instance = new self;
+        }
+        return self::$instance;
+    }
 
     public function compileCommonComponents($builder) :array
     {
@@ -288,13 +306,7 @@ class Grammar
 
     public function compileOrders($builder) :array
     {
-        $orders = [];
-
-        foreach ($builder->orders as $field => $orderItem) {
-            $orders[$field] = is_array($orderItem) ? $orderItem : ['order' => $orderItem];
-        }
-
-        return $orders;
+        return $builder->orders;
     }
 
     public function compileSize($builder)
