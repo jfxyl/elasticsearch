@@ -61,7 +61,7 @@ class Builder
             $this->config = $config;
             $this->client = $this->clientBuilder();
         }
-        $this->grammar = new Grammar();
+        $this->grammar = Grammar::getInstance();
     }
 
     /**
@@ -875,14 +875,15 @@ class Builder
     }
 
     /**
-     * @param string $field
+     * @param $field
      * @param string $sort
      * @return $this
      */
-    public function orderBy(string $field, $sort = 'asc'): self
+    public function orderBy($field, $sort = 'asc'): self
     {
-        $this->orders[$field] = $sort;
-
+        $this->orders[] = is_array($field) ? $field : [
+            $field => ['order' => $sort]
+        ];
         return $this;
     }
 
@@ -1113,10 +1114,11 @@ class Builder
     }
 
     /**
+     * @param string $alias 别名
      * @param $params
      * @return $this
      */
-    public function topHits($params): self
+    public function topHits(string $alias,$params): self
     {
         if (!($params instanceof Closure) && !is_array($params)) {
             throw new \InvalidArgumentException('非法参数');
@@ -1125,7 +1127,7 @@ class Builder
             call_user_func($params, $query = $this->newQuery());
             $params = $query->dsl();
         }
-        return $this->aggs('top_hits', 'top_hits', $params);
+        return $this->aggs($alias, 'top_hits', $params);
     }
 
     /**
